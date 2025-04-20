@@ -1,13 +1,14 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
+import React, { createContext, useState, useContext } from 'react';
 import Web3 from 'web3';
 
 // Import the ABI
 import CarpoolingContractABI from '../contracts/CarpoolingContractABI';
 import DataBankABI from '../contracts/DataBankABI';
 
-// Contract addresses - you'll need to update these with your deployed contract addresses
-const CARPOOLING_CONTRACT_ADDRESS = '0xYourCarpoolingContractAddress';
-const DATABANK_CONTRACT_ADDRESS = '0xYourDataBankContractAddress';
+// Contract addresses - currently using placeholder addresses for development
+// In a production environment, these would be the actual deployed contract addresses
+const CARPOOLING_CONTRACT_ADDRESS = '0x0000000000000000000000000000000000000000';
+const DATABANK_CONTRACT_ADDRESS = '0x0000000000000000000000000000000000000000';
 
 // Create the context
 const Web3Context = createContext();
@@ -27,6 +28,19 @@ export const Web3Provider = ({ children }) => {
     status: 'disconnected',
     message: 'Not connected to blockchain'
   });
+  
+  // Attempt to connect automatically when the component mounts
+  React.useEffect(() => {
+    const attemptConnection = async () => {
+      try {
+        await initWeb3();
+      } catch (error) {
+        console.error('Failed to initialize Web3 automatically:', error);
+      }
+    };
+    
+    attemptConnection();
+  }, []);
 
   // Initialize Web3 and contracts
   const initWeb3 = async () => {

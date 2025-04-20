@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Container, Row, Col, Card, Button, Alert } from 'react-bootstrap';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useWeb3 } from '../utils/Web3Context';
 import LoadingSpinner from '../components/LoadingSpinner';
 
@@ -21,6 +21,13 @@ const Login = ({ setIsConnected, setUserAddress, setUserDetails }) => {
     try {
       setLoading(true);
       setError('');
+      
+      // Check if ethereum object exists in the window (MetaMask)
+      if (!window.ethereum && !window.web3) {
+        setError('No Ethereum wallet detected. Please install MetaMask to use this application.');
+        setLoading(false);
+        return;
+      }
       
       const success = await initWeb3();
       
@@ -95,7 +102,23 @@ const Login = ({ setIsConnected, setUserAddress, setUserDetails }) => {
                 <p className="text-muted">Blockchain-based carpooling platform</p>
               </div>
               
-              {error && <Alert variant="danger">{error}</Alert>}
+              {error && (
+                <Alert variant="danger">
+                  {error}
+                  {error.includes('No Ethereum wallet detected') && (
+                    <div className="mt-2">
+                      <a 
+                        href="https://metamask.io/download/" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="btn btn-outline-light btn-sm"
+                      >
+                        Install MetaMask
+                      </a>
+                    </div>
+                  )}
+                </Alert>
+              )}
               
               <div className="d-grid gap-2 mb-4">
                 <Button 
