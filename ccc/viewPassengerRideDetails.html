@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TukTukGo - Passenger Ride Details</title>
+    
+    <!-- External Libraries -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
+    <script src="node_modules/web3/dist/web3.min.js"></script>
+    <script src="web3connection.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    
+    <style>
+        :root {
+            --primary-color: #e3c29e;
+            --primary-hover: #d4b08c;
+            --secondary-color: #3d3933;
+            --background-start: #faf6f1;
+            --background-end: #f5ebe0;
+            --text-primary: #6b4423;
+            --text-secondary: #8b6b4f;
+            --panel-background: #ffffff;
+            --shadow-color: rgba(227, 194, 158, 0.2);
+            --danger-color: #dc3545;
+            --danger-hover: #bb2d3b;
+            --success-color: #28a745;
+            --success-hover: #218838;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--background-start), var(--background-end), var(--background-start));
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            min-height: 100vh;
+            padding: 2rem;
+            color: var(--text-primary);
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: var(--panel-background);
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 30px var(--shadow-color);
+            transition: all 0.3s ease;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        .container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px var(--shadow-color);
+        }
+
+        .logo {
+            width: 150px;
+            height: 150px;
+            margin: 0 auto 1.5rem;
+            display: block;
+            border-radius: 50%;
+            object-fit: cover;
+            box-shadow: 0 8px 20px var(--shadow-color);
+            transition: all 0.5s ease;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .logo:hover {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        h1, h4 {
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(45deg, var(--text-primary), var(--primary-color));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        h4 {
+            font-size: 1.5rem;
+            margin: 2rem 0 1rem;
+        }
+
+        .user-info {
+            background: var(--background-start);
+            padding: 1.5rem;
+            border-radius: 1rem;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .user-info:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px var(--shadow-color);
+        }
+
+        .user-info div {
+            margin-bottom: 0.5rem;
+            padding: 0.75rem;
+            background: white;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .user-info div:hover {
+            transform: translateX(5px);
+            box-shadow: 0 2px 8px var(--shadow-color);
+        }
+
+        .ride-list {
+            margin-top: 2rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            padding: 1rem;
+        }
+
+        .ride-card {
+            background: var(--background-start);
+            padding: 1.5rem;
+            border-radius: 1rem;
+            transition: all 0.3s ease;
+            height: 100%;
+        }
+
+        .ride-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px var(--shadow-color);
+        }
+
+        .ride-card ul {
+            list-style: none;
+            background: white;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin: 1rem 0;
+        }
+
+        .ride-card li {
+            padding: 0.5rem;
+            border-bottom: 1px solid var(--secondary-color);
+        }
+
+        .ride-card li:last-child {
+            border-bottom: none;
+        }
+
+        .title {
+            color: var(--primary-color);
+            font-weight: 600;
+            display: block;
+            margin-bottom: 0.25rem;
+        }
+
+        .highlight {
+            color: var(--success-color);
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            background-color: var(--primary-color);
+            color: white !important;
+            text-decoration: none;
+            border-radius: 0.5rem;
+            margin: 0.5rem;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px var(--shadow-color);
+        }
+
+        .actions {
+            text-align: right;
+            margin: 1rem 0;
+        }
+
+        hr {
+            border: none;
+            height: 1px;
+            background: var(--secondary-color);
+            margin: 1.5rem 0;
+            transition: all 0.3s ease;
+        }
+
+        hr:hover {
+            height: 2px;
+            background: var(--primary-color);
+        }
+
+        .loading {
+            display: inline-block;
+            animation: pulse 1s infinite;
+            color: var(--text-secondary);
+        }
+
+        .no-rides {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            .container {
+                padding: 1.5rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .logo {
+                width: 120px;
+                height: 120px;
+            }
+
+            .ride-list {
+                grid-template-columns: 1fr;
+            }
+
+            .actions {
+                text-align: center;
+            }
+
+            .btn {
+                display: block;
+                width: 100%;
+                margin: 0.5rem 0;
+            }
+        }
+    </style>
+
+    <script>
+        $(document).ready(function() {
+            var hashcode = Cookies.get('hashcodecp');
+            var username = Cookies.get('usernamecp');
+            var availableRidesCount = 0;
+
+            $("#uname").html(username);
+            $("#hcode").html(hashcode);
+
+            web3.eth.getBalance(hashcode).then(function(rvalue) {
+                rvalue = web3.utils.fromWei(rvalue, "ether");
+                $("#balance").html(rvalue + " ETH");
+            });
+
+            myContract.methods.getPassengerRides(hashcode).call().then(
+                function(returnarray) {
+                    var index = 0;
+                    var totalrides = parseInt(returnarray[1]);
+                    var rideno = 1;
+                    
+                    while(index < totalrides) {
+                        var obj = returnarray[0][index];
+                        
+                        // Only show rides that are not booked and are active
+                        if(!obj[10] && obj[12]) {
+                            availableRidesCount++;
+                            var output = '<div class="ride-card animate__animated animate__fadeInUp">';
+                            output += '<h4>Ride ' + rideno + '</h4>';
+                            output += '<ul>';
+                            output += '<li><span class="title">Heading From</span>' + obj[2] + '</li>';
+                            output += '<li><span class="title">Heading To</span>' + obj[3] + '</li>';
+                            output += '<li><span class="title">Ride Date</span>' + obj[4] + '</li>';
+                            output += '<li><span class="title">Ride Time</span>' + obj[5] + '</li>';
+                            output += '<li><span class="title">Ride Charges</span>' + obj[6] + ' ETH</li>';
+                            output += '<li><span class="title">Number of Persons</span>' + obj[7] + '</li>';
+                            output += '<li><span class="title highlight">Current Booking Status</span>' + obj[8] + '</li>';
+                            output += '<li><span class="title">Vehicle Type</span>' + obj[9] + '</li>';
+                            output += '</ul>';
+
+                            output += '<div class="actions">';
+                            output += '<a class="btn" href="viewPersonDetails.html?rideno=' + obj[0] + '&personhashcode=' + obj[1] + '">Person Details</a>';
+                            output += '<a class="btn" href="mapRideBooking.html?rideno=' + obj[0] + '">Book My Ride</a>';
+                            output += '</div></div>';
+                            
+                            $("#ridedetails").append(output);
+                        }
+                        index++;
+                        rideno++;
+                    }
+
+                    $("#ridecount").text(availableRidesCount);
+
+                    if (availableRidesCount === 0) {
+                        $("#ridedetails").html('<div class="no-rides">No available rides found</div>');
+                    }
+                }
+            );
+        });
+    </script>
+</head>
+<body>
+    <div class="container animate__animated animate__fadeIn">
+        <img src="https://th.bing.com/th/id/OIP.wlv8MNurvosJphwIPPKUAAAAAA?rs=1&pid=ImgDetMain" alt="TukTukGo Logo" class="logo" />
+        
+        <h1>Passenger Ride Details</h1>
+        
+        <div class="user-info animate__animated animate__fadeInUp">
+            <div>Welcome, <strong><span id="uname">Loading...</span></strong></div>
+            <div>Account ID: <strong><span id="hcode">Loading...</span></strong></div>
+            <div>Account Balance: <strong><span id="balance">Loading...</span></strong></div>
+        </div>
+        
+        <hr />
+        
+        <div class="actions">
+            <a class="btn" href="dashboardpassenger.html">Back to Dashboard</a>
+        </div>
+        
+        <h4>Available Rides (<span id="ridecount">0</span>)</h4>
+        
+        <div id="ridedetails" class="ride-list">
+            <!-- Ride details will be dynamically inserted here -->
+        </div>
+    </div>
+</body>
+</html>

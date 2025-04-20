@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CarPooling - Driver Rides</title>
+    
+    <!-- External Libraries -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
+    <script src="node_modules/web3.js-browser/build/web3.js"></script>
+    <script src="node_modules/web3/dist/web3.min.js"></script>
+    <script src="web3connection.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <link rel="stylesheet" href="style.css" />
+    
+    <style>
+        :root {
+            --primary-color: #e3c29e;
+            --primary-hover: #d4b08c;
+            --secondary-color: #f0d5b3;
+            --background-start: #faf6f1;
+            --background-end: #f5ebe0;
+            --text-primary: #6b4423;
+            --text-secondary: #8b6b4f;
+            --panel-background: #ffffff;
+            --shadow-color: rgba(227, 194, 158, 0.2);
+            --success-color: #4caf50;
+            --pending-color: #ff9800;
+            --danger-color: #f44336;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from { 
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--background-start), var(--background-end), var(--background-start));
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            min-height: 100vh;
+            color: var(--text-primary);
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            animation: fadeIn 1s ease-out;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+            animation: slideIn 0.8s ease-out;
+        }
+
+        .app-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(45deg, var(--text-primary), var(--primary-color));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.5px;
+            animation: pulse 2s infinite;
+        }
+
+        .divider {
+            height: 4px;
+            width: 80px;
+            background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+            margin: 1rem auto;
+            border-radius: 2px;
+        }
+
+        .user-info {
+            background-color: var(--panel-background);
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px var(--shadow-color);
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            animation: slideIn 1s ease-out;
+            border: 1px solid rgba(227, 194, 158, 0.1);
+            backdrop-filter: blur(10px);
+            transform-style: preserve-3d;
+            transition: all 0.5s ease;
+        }
+
+        .user-info:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px var(--shadow-color);
+            border-color: var(--primary-color);
+        }
+
+        .user-details {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .user-detail {
+            margin-bottom: 0.75rem;
+        }
+
+        .detail-label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 0.25rem;
+            display: block;
+        }
+
+        .detail-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .dashboard-link {
+            background-color: var(--primary-color);
+            color: var(--text-primary);
+            padding: 0.75rem 1.5rem;
+            border-radius: 1rem;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.4s ease;
+            display: inline-block;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dashboard-link::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: -100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: 0.5s;
+        }
+
+        .dashboard-link:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px var(--shadow-color);
+        }
+
+        .dashboard-link:hover::after {
+            left: 100%;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            animation: slideIn 1.2s ease-out;
+            color: var(--text-primary);
+        }
+
+        .section-icon {
+            color: var(--primary-color);
+        }
+
+        .rides-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .ride-card {
+            background-color: var(--panel-background);
+            border-radius: 1.5rem;
+            overflow: hidden;
+            box-shadow: 0 10px 30px var(--shadow-color);
+            transition: all 0.5s ease;
+            animation: fadeIn 1.5s ease-out;
+            border: 1px solid rgba(227, 194, 158, 0.1);
+            backdrop-filter: blur(10px);
+            transform-style: preserve-3d;
+        }
+
+        .ride-card:hover {
+            transform: translateY(-5px) rotateX(2deg);
+            box-shadow: 0 20px 40px var(--shadow-color);
+            border-color: var(--primary-color);
+        }
+
+        .ride-header {
+            background: linear-gradient(to right, var(--secondary-color), rgba(240, 213, 179, 0.3));
+            padding: 1.25rem;
+            border-bottom: 1px solid rgba(227, 194, 158, 0.2);
+        }
+
+        .ride-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .ride-date {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .ride-content {
+            padding: 1.5rem;
+        }
+
+        .ride-detail {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+            gap: 0.75rem;
+        }
+
+        .detail-icon {
+            width: 1.25rem;
+            height: 1.25rem;
+            color: var(--primary-color);
+            flex-shrink: 0;
+            margin-top: 0.25rem;
+        }
+
+        .detail-content {
+            flex: 1;
+        }
+
+        .detail-name {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 0.25rem;
+        }
+
+        .detail-info {
+            font-size: 1rem;
+            color: var(--text-primary);
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .status-active {
+            background-color: rgba(76, 175, 80, 0.1);
+            color: var(--success-color);
+        }
+
+        .status-cancelled {
+            background-color: rgba(244, 67, 54, 0.1);
+            color: var(--danger-color);
+        }
+
+        .ride-footer {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid rgba(227, 194, 158, 0.2);
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .action-button {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: none;
+            border-radius: 1rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .action-button::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: -100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: 0.5s;
+        }
+
+        .action-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px var(--shadow-color);
+        }
+
+        .action-button:hover::after {
+            left: 100%;
+        }
+
+        .btn-cancel {
+            background-color: rgba(244, 67, 54, 0.1);
+            color: var(--danger-color);
+        }
+
+        .btn-cancel:hover {
+            background-color: rgba(244, 67, 54, 0.2);
+        }
+
+        .btn-activate {
+            background-color: rgba(76, 175, 80, 0.1);
+            color: var(--success-color);
+        }
+
+        .btn-activate:hover {
+            background-color: rgba(76, 175, 80, 0.2);
+        }
+
+        .btn-update {
+            background-color: var(--primary-color);
+            color: var(--text-primary);
+        }
+
+        .btn-update:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid var(--secondary-color);
+            border-top: 5px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            background-color: var(--panel-background);
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 30px var(--shadow-color);
+            border: 1px solid rgba(227, 194, 158, 0.1);
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .empty-state-text {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+        }
+
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            .rides-container {
+                grid-template-columns: 1fr;
+            }
+
+            .user-info {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .user-details {
+                margin-bottom: 1.5rem;
+                width: 100%;
+            }
+
+            .app-title {
+                font-size: 2rem;
+            }
+
+            .two-column {
+                grid-template-columns: 1fr;
+            }
+
+            .ride-footer {
+                flex-direction: column;
+            }
+        }
+    </style>
+
+    <script>
+        $(document).ready(function(){
+            // Show loading overlay
+            $('body').append('<div class="loading-overlay"><div class="loading-spinner"></div></div>');
+
+            // Get user data from cookies
+            var hashcode = Cookies.get('hashcodecp');
+            var username = Cookies.get('usernamecp');  
+
+            $("#uname").text(username); 
+            $("#hcode").text(hashcode);
+
+            // Get balance
+            web3.eth.getBalance(hashcode).then(function(rvalue){
+                rvalue = web3.utils.fromWei(rvalue, "ether");
+                $("#balance").text(rvalue + " ETH"); 
+                
+                // Hide loading after balance is fetched
+                setTimeout(function() {
+                    $(".loading-overlay").fadeOut(300);
+                }, 500);
+            });
+
+            // Fetch & Fill Ride Details
+            myContract.methods.getMyRides(hashcode).call().then(
+                function(returnarray){
+                    var totalrides = parseInt(returnarray[1]);
+                    $("#ridecount").text(totalrides);
+                    
+                    if (totalrides === 0) {
+                        $("#ridedetails").html(`
+                            <div class="empty-state">
+                                <div class="empty-state-icon">🚗</div>
+                                <div class="empty-state-text">You haven't created any rides yet.</div>
+                            </div>
+                        `);
+                        return;
+                    }
+                    
+                    var index = 0;
+                    var output = '<div class="rides-container">';
+                    
+                    while(index < totalrides) {
+                        var obj = returnarray[0][index];
+                        var isActive = obj[12] == true;
+                        
+                        output += `<div class="ride-card animate__animated animate__fadeIn" style="animation-delay: ${index * 0.1}s">`;
+                        
+                        // Card Header
+                        output += `<div class="ride-header">
+                            <div class="ride-title">
+                                <span>Ride #${index + 1}</span>
+                                <span class="status-badge ${isActive ? 'status-active' : 'status-cancelled'}">
+                                    ${isActive ? 'Active' : 'Cancelled'}
+                                </span>
+                            </div>
+                            <div class="ride-date">${obj[4]} at ${obj[5]}</div>
+                        </div>`;
+                        
+                        // Card Content
+                        output += `<div class="ride-content">
+                            <div class="ride-detail">
+                                <svg class="detail-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                </svg>
+                                <div class="detail-content">
+                                    <div class="detail-name">From</div>
+                                    <div class="detail-info">${obj[2]}</div>
+                                </div>
+                            </div>
+                            
+                            <div class="ride-detail">
+                                <svg class="detail-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                </svg>
+                                <div class="detail-content">
+                                    <div class="detail-name">To</div>
+                                    <div class="detail-info">${obj[3]}</div>
+                                </div>
+                            </div>
+                            
+                            <div class="two-column">
+                                <div class="ride-detail">
+                                    <svg class="detail-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                    </svg>
+                                    <div class="detail-content">
+                                        <div class="detail-name">Date</div>
+                                        <div class="detail-info">${obj[4]}</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="ride-detail">
+                                    <svg class="detail-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    <div class="detail-content">
+                                        <div class="detail-name">Time</div>
+                                        <div class="detail-info">${obj[5]}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="two-column">
+                                <div class="ride-detail">
+                                    <svg class="detail-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    <div class="detail-content">
+                                        <div class="detail-name">Charges</div>
+                                        <div class="detail-info">${obj[6]} ETH</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="ride-detail">
+                                    <svg class="detail-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                    </svg>
+                                    <div class="detail-content">
+                                        <div class="detail-name">Persons</div>
+                                        <div class="detail-info">${obj[7]}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="ride-detail">
+                                <svg class="detail-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <div class="detail-content">
+                                    <div class="detail-name">Vehicle Type</div>
+                                    <div class="detail-info">${obj[9]}</div>
+                                </div>
+                            </div>
+                        </div>`;
+                        
+                        // Card Footer with Action Buttons
+                        output += `<div class="ride-footer">`;
+                        
+                        if(isActive) {
+                            output += `<a href="cancelride.html?rideno=${obj[0]}" class="action-button btn-cancel">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 5px; vertical-align: middle;">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="15" y1="9" x2="9" y2="15"></line>
+                                    <line x1="9" y1="9" x2="15" y2="15"></line>
+                                </svg>
+                                Cancel Ride
+                            </a>`;
+                        } else {
+                            output += `<a href="activateride.html?rideno=${obj[0]}" class="action-button btn-activate">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 5px; vertical-align: middle;">
+                                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                                </svg>
+                                Activate Ride
+                            </a>`;
+                        }
+                        
+                        output += `<a href="updateridestatus.html?rideno=${obj[0]}" class="action-button btn-update">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 5px; vertical-align: middle;">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                            </svg>
+                            Update Status
+                        </a>`;
+                        
+                        output += `</div>`; // Close ride-footer
+                        
+                        output += "</div>"; // Close ride-card
+                        index++;
+                    }
+                    
+                    output += "</div>"; // Close rides-container
+                    $("#ridedetails").html(output);
+                }
+            ).catch(function(error) {
+                console.error("Error fetching rides:", error);
+                $(".loading-overlay").fadeOut(300);
+                $("#ridedetails").html(`
+                    <div class="empty-state">
+                        <div class="empty-state-icon">⚠️</div>
+                        <div class="empty-state-text">Error loading your rides. Please try again later.</div>
+                    </div>
+                `);
+            });
+        });
+    </script>
+</head>
+
+<body>
+    <div class="loading-overlay">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <div class="container">
+        <header class="header">
+            <h1 class="app-title">CarPooling - Driver Rides</h1>
+            <div class="divider"></div>
+        </header>
+        
+        <div class="user-info">
+            <div class="user-details">
+                <div class="user-detail">
+                    <span class="detail-label">Welcome</span>
+                    <span class="detail-value" id="uname"></span>
+                </div>
+                <div class="user-detail">
+                    <span class="detail-label">Account ID</span>
+                    <span class="detail-value" id="hcode"></span>
+                </div>
+                <div class="user-detail">
+                    <span class="detail-label">Account Balance</span>
+                    <span class="detail-value" id="balance"></span>
+                </div>
+            </div>
+            <a class="dashboard-link" href="dashboard.html">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 5px; vertical-align: middle;">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="3" y1="9" x2="21" y2="9"></line>
+                    <line x1="9" y1="21" x2="9" y2="9"></line>
+                </svg>
+                Dashboard
+            </a>
+        </div>
+        
+        <div class="section-title">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="section-icon">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <line x1="10" y1="9" x2="8" y2="9"></line>
+            </svg>
+            My Ride Details (<span id="ridecount">0</span>)
+        </div>
+        
+        <div id="ridedetails">
+            <!-- Ride details will be populated here -->
+        </div>
+    </div>
+</body>
+</html>

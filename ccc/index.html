@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CarPooling - Login Panel</title>
+    
+    <!-- External Libraries -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
+    <script src="node_modules/web3.js-browser/build/web3.js"></script>
+    <script src="node_modules/web3/dist/web3.min.js"></script>
+    <script src="web3connection.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+   
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="style.css" />
+    
+    <style>
+        :root {
+            --primary-color: #e3c29e;
+            --primary-hover: #d4b08c;
+            --secondary-color: #f0d5b3;
+            --background-start: #faf6f1;
+            --background-end: #f5ebe0;
+            --text-primary: #6b4423;
+            --text-secondary: #8b6b4f;
+            --panel-background: #ffffff;
+            --shadow-color: rgba(227, 194, 158, 0.2);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes slideIn {
+            from { 
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--background-start), var(--background-end), var(--background-start));
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .logo-container {
+            margin-bottom: 2rem;
+            text-align: center;
+            position: relative;
+            animation: slideIn 1s ease-out;
+        }
+
+        .logo {
+            width: 180px;
+            height: 180px;
+            margin-bottom: 1rem;
+            border-radius: 50%;
+            box-shadow: 0 8px 20px var(--shadow-color);
+            transition: all 0.5s ease;
+            animation: float 6s ease-in-out infinite;
+            object-fit: cover;
+        }
+
+        .logo:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 15px 30px var(--shadow-color);
+        }
+
+        .app-title {
+            font-size: 3.5rem;
+            font-weight: 800;
+            background: linear-gradient(45deg, var(--text-primary), var(--primary-color));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 0.5rem;
+            text-align: center;
+            letter-spacing: -0.5px;
+            animation: pulse 2s infinite;
+        }
+
+        .app-subtitle {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            text-align: center;
+            max-width: 600px;
+            line-height: 1.6;
+            opacity: 0;
+            animation: slideIn 1s ease-out forwards;
+            animation-delay: 0.5s;
+        }
+
+        .login-container {
+            display: flex;
+            gap: 2rem;
+            max-width: 1000px;
+            width: 100%;
+            margin: 0 auto;
+            perspective: 1000px;
+            opacity: 0;
+            animation: slideIn 1s ease-out forwards;
+            animation-delay: 0.8s;
+        }
+
+        .login-panel {
+            flex: 1;
+            background: var(--panel-background);
+            padding: 2.5rem;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 30px var(--shadow-color);
+            transition: all 0.5s ease;
+            border: 1px solid rgba(227, 194, 158, 0.1);
+            backdrop-filter: blur(10px);
+            transform-style: preserve-3d;
+        }
+
+        .login-panel:hover {
+            transform: translateY(-5px) rotateX(2deg);
+            box-shadow: 0 20px 40px var(--shadow-color);
+            border-color: var(--primary-color);
+        }
+
+        .panel-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            transition: all 0.3s ease;
+        }
+
+        .panel-icon {
+            width: 2rem;
+            height: 2rem;
+            color: var(--primary-color);
+            transition: all 0.3s ease;
+        }
+
+        .login-panel:hover .panel-icon {
+            transform: rotate(360deg);
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .input-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 0.75rem;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 1rem 1.25rem;
+            border: 2px solid var(--secondary-color);
+            border-radius: 1rem;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background-color: rgba(255, 255, 255, 0.8);
+            color: var(--text-primary);
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 20px var(--shadow-color);
+            transform: translateY(-2px);
+            background-color: white;
+        }
+
+        .input-field::placeholder {
+            color: var(--text-secondary);
+            opacity: 0.6;
+        }
+
+        .login-button {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            background-color: var(--primary-color);
+            color: var(--text-primary);
+            border: none;
+            border-radius: 1rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-button::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: -100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: 0.5s;
+        }
+
+        .login-button:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px var(--shadow-color);
+        }
+
+        .login-button:hover::after {
+            left: 100%;
+        }
+
+        .login-button:active {
+            transform: translateY(0);
+        }
+
+        /* New styles for the metamask button container */
+        .metamask-container {
+            width: 100%;
+            max-width: 400px;
+            margin: 2rem auto 0;
+            text-align: center;
+            opacity: 0;
+            animation: slideIn 1s ease-out forwards;
+            animation-delay: 1s;
+        }
+
+        .new-user-link {
+            display: inline-block;
+            text-align: center;
+            margin-top: 2rem;
+            color: var(--text-primary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            padding: 0.5rem 1rem;
+            border-radius: 0.75rem;
+            background-color: transparent;
+            opacity: 0;
+            animation: slideIn 1s ease-out forwards;
+            animation-delay: 1.2s;
+        }
+
+        .new-user-link:hover {
+            color: var(--primary-color);
+            background-color: var(--shadow-color);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px var(--shadow-color);
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid var(--secondary-color);
+            border-top: 5px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .login-container {
+                flex-direction: column;
+                gap: 1.5rem;
+            }
+
+            .app-title {
+                font-size: 2.5rem;
+            }
+
+            .login-panel {
+                padding: 2rem;
+            }
+
+            body {
+                padding: 1rem;
+            }
+        }
+        .chatbot-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 9999;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .chatbot-button {
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .chatbot-button:hover {
+            background-color: var(--primary-hover);
+        }
+        
+        .chatbot-window {
+            display: none;
+            flex-direction: column;
+            background-color: white;
+            width: 320px;
+            height: 400px;
+            border-radius: 1rem;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+            position: absolute;
+            bottom: 70px;
+            right: 0;
+            animation: slideInUp 0.3s ease forwards;
+        }
+        
+        .chatbot-header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 1rem;
+            font-weight: bold;
+        }
+        
+        .chatbot-messages {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+            font-size: 0.9rem;
+            background-color: #f9f9f9;
+        }
+        
+        .chatbot-input-area {
+            display: flex;
+            border-top: 1px solid #eee;
+            padding: 0.5rem;
+        }
+        
+        .chatbot-input-area input {
+            flex: 1;
+            padding: 0.5rem 1rem;
+            border: none;
+            outline: none;
+            font-size: 0.9rem;
+            border-radius: 0.5rem;
+            margin-right: 0.5rem;
+            background: #f0f0f0;
+        }
+        
+        .chatbot-input-area button {
+            background: var(--primary-color);
+            border: none;
+            color: white;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+        }
+        
+        .bot-message, .user-message {
+            margin-bottom: 0.75rem;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.75rem;
+            max-width: 80%;
+            clear: both;
+        }
+        
+        .bot-message {
+            background-color: #eee;
+            float: left;
+        }
+        
+        .user-message {
+            background-color: var(--primary-color);
+            color: white;
+            float: right;
+        }
+        
+    </style>
+
+    <script>
+        $(document).ready(function(){
+            function showLoading() {
+                $('.loading-overlay').fadeIn(200);
+            }
+
+            function hideLoading() {
+                $('.loading-overlay').fadeOut(200);
+            }
+
+            function showError(message) {
+                hideLoading();
+                const errorDiv = $('<div>')
+                    .addClass('error-message animate__animated animate__shakeX')
+                    .text(message)
+                    .css({
+                        'background-color': '#fff',
+                        'color': '#dc3545',
+                        'padding': '1rem',
+                        'border-radius': '0.5rem',
+                        'position': 'fixed',
+                        'top': '20px',
+                        'right': '20px',
+                        'box-shadow': '0 4px 12px rgba(0,0,0,0.1)',
+                        'z-index': 1000
+                    });
+
+                $('body').append(errorDiv);
+                setTimeout(() => {
+                    errorDiv.addClass('animate__fadeOut');
+                    setTimeout(() => errorDiv.remove(), 1000);
+                }, 3000);
+            }
+
+            // Driver Login
+            $("#btn_action").click(function(){
+                const hashcode = $("#hashaddressdp").val();
+                if (!hashcode) {
+                    showError("Please enter your user address");
+                    return;
+                }
+
+                showLoading();
+                try {
+                    myContract.methods.loginPanel(hashcode).call()
+                        .then(function(returndata){
+                            hideLoading();
+                            if(returndata[1] == 1){
+                                const uname = returndata[0];
+                                Cookies.set('hashcodecp', hashcode, { expires: 14 });
+                                Cookies.set('usernamecp', uname, { expires: 14 });
+                                
+                                // Add success animation before redirect
+                                $('.login-panel').addClass('animate__animated animate__fadeOutUp');
+                                setTimeout(() => {
+                                    window.location.replace('dashboard.html');
+                                }, 500);
+                            } else {
+                                showError("User Account Not Found");
+                            }
+                        })
+                        .catch(function(error) {
+                            showError("An error occurred. Please try again.");
+                            console.error(error);
+                        });
+                } catch (error) {
+                    showError("Connection error. Please check your web3 connection.");
+                    console.error(error);
+                }
+            });
+
+            // Passenger Login
+            $("#btn_action2").click(function(){
+                const hashcode = $("#hashaddresspp").val();
+                if (!hashcode) {
+                    showError("Please enter your user address");
+                    return;
+                }
+
+                showLoading();
+                try {
+                    myContract.methods.loginPanel(hashcode).call()
+                        .then(function(returndata){
+                            hideLoading();
+                            if(returndata[1] == 1){
+                                const uname = returndata[0];
+                                Cookies.set('hashcodecp', hashcode, { expires: 14 });
+                                Cookies.set('usernamecp', uname, { expires: 14 });
+                                
+                                // Add success animation before redirect
+                                $('.login-panel').addClass('animate__animated animate__fadeOutUp');
+                                setTimeout(() => {
+                                    window.location.replace('dashboardpassenger.html');
+                                }, 500);
+                            } else {
+                                showError("User Account Not Found");
+                            }
+                        })
+                        .catch(function(error) {
+                            showError("An error occurred. Please try again.");
+                            console.error(error);
+                        });
+                } catch (error) {
+                    showError("Connection error. Please check your web3 connection.");
+                    console.error(error);
+                }
+            });
+
+            // Add hover animations for panels
+            $('.login-panel').hover(
+                function() {
+                    $(this).find('.panel-title').css('transform', 'translateZ(20px)');
+                    $(this).find('.input-group').css('transform', 'translateZ(10px)');
+                },
+                function() {
+                    $(this).find('.panel-title').css('transform', 'translateZ(0)');
+                    $(this).find('.input-group').css('transform', 'translateZ(0)');
+                }
+            );
+        });
+        async function connectMetaMask() {
+            if (window.ethereum) {
+                try {
+                    // Request account access
+                    const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+                    const account = accounts[0];
+                    
+                    // Ask user if they are logging in as Driver or Passenger
+                    const userType = confirm("Are you logging in as a Driver? Click 'OK' for Driver, 'Cancel' for Passenger.")
+                        ? "driver" : "passenger";
+                    
+                    if (userType === "driver") {
+                        document.getElementById("hashaddressdp").value = account; // Driver input field
+                    } else {
+                        document.getElementById("hashaddresspp").value = account; // Passenger input field
+                    }
+                    
+                    document.getElementById("hashaddress").value = account; // For registration
+                    alert("Connected as " + (userType === "driver" ? "Driver" : "Passenger") + ": " + account);
+                } catch (error) {
+                    console.error("Error connecting to MetaMask", error);
+                    alert("Connected");
+                }
+            } else {
+                alert("MetaMask is not installed. Please install it to continue.");
+            }
+        }
+        
+    </script>
+</head>
+<body>
+    <div class="loading-overlay">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <div class="logo-container">
+        <img src="https://media.licdn.com/dms/image/v2/C5612AQHo2aPUmzT7fg/article-cover_image-shrink_720_1280/article-cover_image-shrink_720_1280/0/1567710080217?e=2147483647&v=beta&t=EAteaoaGJMuIQfBzKTil-u-OlYziNhtXQO60QWhf_aM" alt="CarPooling Logo" class="logo" />
+        <h1 class="app-title">TukTukGo</h1>
+        <p class="app-subtitle">Connect with drivers and passengers in your area for sustainable travel</p>
+    </div>
+    
+    <div class="login-container">
+        <!-- Driver Login Panel -->
+        <div class="login-panel animate__animated animate__fadeInLeft">
+            <h2 class="panel-title">
+                <svg class="panel-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                Driver Login
+            </h2>
+            <form id="form1">
+                <div class="input-group">
+                    <label class="input-label" for="hashaddressdp">User Address</label>
+                    <input type="text" id="hashaddressdp" class="input-field" placeholder="Enter your address" />
+                </div>
+                <button type="button" id="btn_action" class="login-button">Log in as Driver</button>
+            </form>
+        </div>
+
+        <!-- Passenger Login Panel -->
+        <div class="login-panel animate__animated animate__fadeInRight">
+            <h2 class="panel-title">
+                <svg class="panel-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                </svg>
+                Passenger Login
+            </h2>
+            <form id="form2">
+                <div class="input-group">
+                    <label class="input-label" for="hashaddresspp">User Address</label>
+                    <input type="text" id="hashaddresspp" class="input-field" placeholder="Enter your address" />
+                </div>
+                <button type="button" id="btn_action2" class="login-button">Log in as Passenger</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MetaMask button in its own container -->
+    <div class="metamask-container">
+        <button onclick="connectMetaMask()" class="login-button">Connect with MetaMask</button>
+    </div>
+
+    <a href="newuser.html" class="new-user-link">New to CarPooling? Create an account</a>
+    <!-- Chatbot Floating Button & Window -->
+<div class="chatbot-container">
+    <div class="chatbot-button" onclick="toggleChatbot()">💬</div>
+    <div class="chatbot-window" id="chatbotWindow">
+        <div class="chatbot-header">TukTukBot 🤖</div>
+        <div class="chatbot-messages" id="chatbotMessages">
+            <div class="bot-message">Hello! How can I assist you today?</div>
+        </div>
+        <div class="chatbot-input-area">
+            <input type="text" id="chatInput" placeholder="Type your message..." onkeydown="if(event.key==='Enter') sendMessage()" />
+            <button onclick="sendMessage()">➤</button>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TukTukGo - Publish Ride</title>
+    
+    <!-- External Libraries -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
+    <script src="node_modules/web3.js-browser/build/web3.js"></script>
+    <script src="node_modules/web3/dist/web3.min.js"></script>
+    <script src="web3connection.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    
+    <style>
+        :root {
+            --primary-color: #e3c29e;
+            --primary-hover: #d4b08c;
+            --secondary-color: #f0d5b3;
+            --background-start: #faf6f1;
+            --background-end: #f5ebe0;
+            --text-primary: #6b4423;
+            --text-secondary: #8b6b4f;
+            --panel-background: #ffffff;
+            --shadow-color: rgba(227, 194, 158, 0.2);
+            --error-color: #dc3545;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--background-start), var(--background-end));
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .header {
+            width: 100%;
+            max-width: 1200px;
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            background: var(--panel-background);
+            border-radius: 1rem;
+            box-shadow: 0 4px 15px var(--shadow-color);
+            animation: slideIn 0.5s ease-out;
+        }
+
+        .user-info {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .info-value {
+            font-size: 1rem;
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .dashboard-link {
+            padding: 0.75rem 1.5rem;
+            background-color: var(--primary-color);
+            color: var(--text-primary);
+            text-decoration: none;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .dashboard-link:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-2px);
+        }
+
+        .main-container {
+            width: 100%;
+            max-width: 800px;
+            background: var(--panel-background);
+            padding: 2.5rem;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 30px var(--shadow-color);
+            animation: slideIn 0.8s ease-out;
+        }
+
+        .form-title {
+            font-size: 2rem;
+            color: var(--text-primary);
+            margin-bottom: 2rem;
+            text-align: center;
+            font-weight: 700;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .input-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .input-label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .input-field {
+            padding: 1rem;
+            border: 2px solid var(--secondary-color);
+            border-radius: 0.75rem;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 15px var(--shadow-color);
+        }
+
+        .input-field.error {
+            border-color: var(--error-color);
+        }
+
+        .error-message {
+            color: var(--error-color);
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+
+        select.input-field {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%238b6b4f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 1.2em;
+            padding-right: 2.5rem;
+        }
+
+        .submit-button {
+            grid-column: 1 / -1;
+            padding: 1rem;
+            background-color: var(--primary-color);
+            color: var(--text-primary);
+            border: none;
+            border-radius: 0.75rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+        }
+
+        .submit-button:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px var(--shadow-color);
+        }
+
+        .submit-button:disabled {
+            background-color: var(--secondary-color);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .success-message {
+            text-align: center;
+            color: #28a745;
+            font-weight: 600;
+            margin-top: 1rem;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+
+            .user-info {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .main-container {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+
+    <script>
+        $(document).ready(function(){
+            // Set minimum date to today
+            function setMinDate() {
+                const today = new Date();
+                const yyyy = today.getFullYear();
+                const mm = String(today.getMonth() + 1).padStart(2, '0');
+                const dd = String(today.getDate()).padStart(2, '0');
+                const minDate = `${yyyy}-${mm}-${dd}`;
+                $("#rdate").attr("min", minDate);
+            }
+
+            setMinDate();
+
+            // Load user data
+            var hashcode = Cookies.get('hashcodecp');
+            var username = Cookies.get('usernamecp');  
+
+            $("#uname").html(username); 
+            $("#hcode").html(hashcode);
+
+            // Get balance
+            web3.eth.getBalance(hashcode).then(function(rvalue){
+                rvalue = web3.utils.fromWei(rvalue, "ether");
+                $("#balance").html(rvalue + " ETH"); 
+            });
+
+            // Validate date and time
+            function validateDateTime() {
+                const selectedDate = new Date($("#rdate").val() + " " + $("#rtime").val());
+                const now = new Date();
+                
+                if (selectedDate < now) {
+                    $("#date-time-error").text("Selected date and time must be in the future");
+                    $("#rdate, #rtime").addClass("error");
+                    $("#btn_submit").prop("disabled", true);
+                    return false;
+                }
+                
+                $("#date-time-error").text("");
+                $("#rdate, #rtime").removeClass("error");
+                $("#btn_submit").prop("disabled", false);
+                return true;
+            }
+
+            // Add event listeners for date and time inputs
+            $("#rdate, #rtime").on("change", validateDateTime);
+
+            // Form validation
+            function validateForm() {
+                let isValid = true;
+                const requiredFields = ["hfrom", "hto", "rdate", "rtime", "rnop", "rcharges"];
+                
+                requiredFields.forEach(field => {
+                    const value = $(`#${field}`).val();
+                    if (!value) {
+                        $(`#${field}`).addClass("error");
+                        isValid = false;
+                    } else {
+                        $(`#${field}`).removeClass("error");
+                    }
+                });
+
+                return isValid && validateDateTime();
+            }
+
+            // Handle form submission
+            $("#btn_submit").click(function(){
+                if (!validateForm()) {
+                    $("#msg").html("Please fill all required fields correctly")
+                        .removeClass("success-message")
+                        .addClass("error-message");
+                    return;
+                }
+
+                var hashcode = Cookies.get('hashcodecp');
+                var headingfrom = $("#hfrom").val();
+                var headingto = $("#hto").val();
+                var ridedate = $("#rdate").val();
+                var ridetime = $("#rtime").val();
+                var nop = $("#rnop").val();
+                var rideamount = $("#rcharges").val();
+                var vehicletype = $("#vtype").val();
+
+                myContract.methods.AddRide(
+                    hashcode,
+                    headingfrom,
+                    headingto,
+                    ridedate,
+                    ridetime,
+                    rideamount,
+                    nop,
+                    vehicletype
+                ).send({from: hashcode, gas: '3000000'})
+                .then(function() {
+                    $("#msg").html("Your ride has been successfully published!")
+                        .removeClass("error-message")
+                        .addClass("success-message");
+                    // Reset form
+                    $("form")[0].reset();
+                    setMinDate();
+                })
+                .catch(function(error) {
+                    $("#msg").html("Error publishing ride. Please try again.")
+                        .removeClass("success-message")
+                        .addClass("error-message");
+                    console.error(error);
+                });
+            });
+        });
+    </script>
+</head>
+<body>
+    <header class="header">
+        <div class="user-info">
+            <div class="info-item">
+                <span class="info-label">Username</span>
+                <span class="info-value" id="uname"></span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Account ID</span>
+                <span class="info-value" id="hcode"></span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Balance</span>
+                <span class="info-value" id="balance"></span>
+            </div>
+        </div>
+        <a href="dashboard.html" class="dashboard-link">Dashboard</a>
+    </header>
+
+    <main class="main-container">
+        <h2 class="form-title">Publish Your Ride</h2>
+        <div id="msg"></div>
+        
+        <form class="form-grid">
+            <div class="input-group">
+                <label class="input-label" for="hfrom">Heading From</label>
+                <input type="text" id="hfrom" class="input-field" placeholder="Enter starting location" required />
+            </div>
+
+            <div class="input-group">
+                <label class="input-label" for="hto">Heading To</label>
+                <input type="text" id="hto" class="input-field" placeholder="Enter destination" required />
+            </div>
+
+            <div class="input-group">
+                <label class="input-label" for="rdate">Ride Date</label>
+                <input type="date" id="rdate" class="input-field" required />
+                <div id="date-time-error" class="error-message"></div>
+            </div>
+
+            <div class="input-group">
+                <label class="input-label" for="rtime">Ride Time</label>
+                <input type="time" id="rtime" class="input-field" required />
+            </div>
+
+            <div class="input-group">
+                <label class="input-label" for="rnop">Number of Persons</label>
+                <input type="number" id="rnop" class="input-field" min="1" placeholder="Available seats" required />
+            </div>
+
+            <div class="input-group">
+                <label class="input-label" for="rcharges">Ride Charges (ETH)</label>
+                <input type="text" id="rcharges" class="input-field" placeholder="Enter fare amount" required />
+            </div>
+
+            <div class="input-group full-width">
+                <label class="input-label" for="vtype">Vehicle Type</label>
+                <select id="vtype" class="input-field" required>
+                    <option value="2 Wheeler">2 Wheeler</option>
+                    <option value="4 Wheeler">4 Wheeler</option>
+                </select>
+            </div>
+
+            <button type="button" id="btn_submit" class="submit-button">Publish My Ride</button>
+        </form>
+    </main>
+</body>
+</html>

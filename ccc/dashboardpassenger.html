@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TukTukGo - Passenger Dashboard</title>
+    
+    <!-- External Libraries -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
+    <script src="node_modules/web3/dist/web3.min.js"></script>
+    <script src="web3connection.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    
+    <style>
+        :root {
+            --primary-color: #e3c29e;
+            --primary-hover: #d4b08c;
+            --secondary-color: #f0d5b3;
+            --background-start: #faf6f1;
+            --background-end: #f5ebe0;
+            --text-primary: #6b4423;
+            --text-secondary: #8b6b4f;
+            --panel-background: #ffffff;
+            --shadow-color: rgba(227, 194, 158, 0.2);
+            --danger-color: #dc3545;
+            --danger-hover: #bb2d3b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--background-start), var(--background-end), var(--background-start));
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            min-height: 100vh;
+            padding: 2rem;
+            color: var(--text-primary);
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: var(--panel-background);
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 30px var(--shadow-color);
+            transition: all 0.3s ease;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        .container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px var(--shadow-color);
+        }
+
+        .logo {
+            width: 150px;
+            height: 150px;
+            margin: 0 auto 1.5rem;
+            display: block;
+            border-radius: 50%;
+            object-fit: cover;
+            box-shadow: 0 8px 20px var(--shadow-color);
+            transition: all 0.5s ease;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .logo:hover {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(45deg, var(--text-primary), var(--primary-color));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .info {
+            background: var(--background-start);
+            padding: 1.5rem;
+            border-radius: 1rem;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .info:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px var(--shadow-color);
+        }
+
+        .info strong {
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        hr {
+            border: none;
+            height: 1px;
+            background: var(--secondary-color);
+            margin: 1.5rem 0;
+            transition: all 0.3s ease;
+        }
+
+        hr:hover {
+            height: 2px;
+            background: var(--primary-color);
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 1rem 1.5rem;
+            background-color: var(--primary-color);
+            color: white;
+            text-decoration: none;
+            border-radius: 1rem;
+            text-align: center;
+            font-weight: 600;
+            margin: 1rem 0;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px var(--shadow-color);
+        }
+
+        .btn_logout {
+            background-color: var(--danger-color);
+        }
+
+        .btn_logout:hover {
+            background-color: var(--danger-hover);
+        }
+
+        h3 {
+            color: var(--text-primary);
+            margin: 2rem 0 1rem;
+            font-size: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        h3:hover {
+            color: var(--primary-color);
+            transform: translateX(10px);
+        }
+
+        .menu {
+            background: var(--background-start);
+            border-radius: 1rem;
+            padding: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .menu:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px var(--shadow-color);
+        }
+
+        .menu li {
+            list-style: none;
+            margin: 0.5rem 0;
+            transition: all 0.3s ease;
+        }
+
+        .menu a {
+            display: block;
+            padding: 1rem;
+            color: var(--text-primary);
+            text-decoration: none;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+            background: var(--panel-background);
+        }
+
+        .menu a:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: translateX(10px);
+            box-shadow: 0 5px 15px var(--shadow-color);
+        }
+
+        #cntview {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background: var(--primary-color);
+            color: white;
+            border-radius: 1rem;
+            font-size: 0.875rem;
+            transition: all 0.3s ease;
+        }
+
+        .loading {
+            display: inline-block;
+            animation: pulse 1s infinite;
+            color: var(--text-secondary);
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            .container {
+                padding: 1.5rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .logo {
+                width: 120px;
+                height: 120px;
+            }
+        }
+    </style>
+
+    <script>
+        $(document).ready(function() {
+            var hashcode = Cookies.get('hashcodecp');
+            var username = Cookies.get('usernamecp');
+
+            $("#uname").html(username);
+            $("#hcode").html(hashcode);
+
+            $("#balance").html("<span class='loading'>Loading...</span>");
+            web3.eth.getBalance(hashcode).then(function(rvalue) {
+                rvalue = web3.utils.fromWei(rvalue, "ether");
+                $("#balance").html(rvalue + " ETH");
+            });
+
+            $("#cntview").html("<span class='loading'>...</span>");
+            myContract.methods.getPassengerRides(hashcode).call().then(function(returnarray) {
+                $("#cntview").text(returnarray[1]);
+            }).catch(() => {
+                $("#cntview").html("Error");
+            });
+        });
+    </script>
+</head>
+<body>
+    <div class="container animate__animated animate__fadeIn">
+        <img src="https://th.bing.com/th/id/OIP.wlv8MNurvosJphwIPPKUAAAAAA?rs=1&pid=ImgDetMain" alt="TukTukGo Logo" class="logo" />
+        
+        <h1>TukTukGo Passenger Panel</h1>
+        
+        <div class="info animate__animated animate__fadeInUp">
+            <div>Welcome, <strong><span id="uname"></span></strong></div>
+            <div>Account ID: <strong><span id="hcode"></span></strong></div>
+            <div>Account Balance: <strong><span id="balance"></span></strong></div>
+        </div>
+        
+        <hr />
+        
+        <div>
+            <a class="btn" href="userdashboardpanelchoice.html">Switch to Account</a>
+            <a class="btn btn_logout" href="index.html">Logout</a>
+        </div>
+        
+        <h3>Menu Options</h3>
+        <ul class="menu animate__animated animate__fadeInUp">
+            <li><a href="ViewPassengerBookedRides.html">🎫 Booked Rides</a></li>
+            <li><a href="viewPassengerRideDetails.html">📋 View All Rides (<span id="cntview">0</span>)</a></li>
+            <li><a href="searchViewByLocation.html">🔍 Search By Location</a></li>
+        </ul>
+    </div>
+</body>
+</html>

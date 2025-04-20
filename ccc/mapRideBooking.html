@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CarPooling - Passenger Panel</title>
+    
+    <!-- External Libraries -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
+    <script src="node_modules/web3/dist/web3.min.js"></script>
+    <script src="web3connection.js"></script>
+    
+    <style>
+        :root {
+            --primary-color: #f97316;
+            --primary-hover: #ea580c;
+            --secondary-color: #ffedd5;
+            --background-start: #fff7ed;
+            --background-end: #fef3c7;
+            --text-primary: #7c2d12;
+            --text-secondary: #9a3412;
+            --panel-background: #ffffff;
+            --shadow-color: rgba(249, 115, 22, 0.2);
+            --success-color: #22c55e;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--background-start), var(--background-end));
+            min-height: 100vh;
+            padding: 2rem;
+            color: var(--text-primary);
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: var(--panel-background);
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 30px var(--shadow-color);
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .logo-container {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 2rem;
+            background: var(--secondary-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .logo-container svg {
+            width: 50px;
+            height: 50px;
+            color: var(--primary-color);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 2rem;
+            background: linear-gradient(45deg, var(--text-primary), var(--primary-color));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .user-info {
+            background: var(--background-start);
+            padding: 1.5rem;
+            border-radius: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: white;
+            border-radius: 0.5rem;
+            transition: transform 0.3s ease;
+        }
+
+        .info-item:hover {
+            transform: translateX(5px);
+        }
+
+        .info-item strong {
+            color: var(--primary-color);
+            min-width: 150px;
+        }
+
+        .dashboard-link {
+            text-align: right;
+            margin: 1rem 0;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            background-color: var(--primary-color);
+            color: white;
+            text-decoration: none;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-2px);
+        }
+
+        .ride-details {
+            background: var(--background-start);
+            padding: 1.5rem;
+            border-radius: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .ride-details h4 {
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            font-size: 1.25rem;
+        }
+
+        .ride-details ul {
+            list-style: none;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        .ride-details li {
+            background: white;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            transition: transform 0.3s ease;
+        }
+
+        .ride-details li:hover {
+            transform: translateY(-2px);
+        }
+
+        .ride-details .title {
+            color: var(--primary-color);
+            font-weight: 500;
+            margin-right: 0.5rem;
+        }
+
+        .booking-form {
+            background: var(--background-start);
+            padding: 1.5rem;
+            border-radius: 1rem;
+        }
+
+        .booking-form h4 {
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            font-size: 1.25rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--secondary-color);
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px var(--shadow-color);
+        }
+
+        #btn_action {
+            width: 100%;
+            padding: 1rem;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        #btn_action:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+        }
+
+        #msg {
+            text-align: center;
+            margin-top: 1rem;
+            color: var(--success-color);
+            font-weight: 500;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            .container {
+                padding: 1.5rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .info-item {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .info-item strong {
+                margin-bottom: 0.5rem;
+                min-width: auto;
+            }
+
+            .ride-details ul {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+
+    <script>
+        $(document).ready(function(){
+            var hashcode = Cookies.get('hashcodecp');
+            var username = Cookies.get('usernamecp');  
+
+            $("#uname").html(username); 
+            $("#hcode").html(hashcode);
+
+            web3.eth.getBalance(hashcode).then(function(rvalue){
+                rvalue = web3.utils.fromWei(rvalue, "ether");
+                $("#balance").html(rvalue + " ETH"); 
+            });
+
+            var param = new URLSearchParams(window.location.search);
+            var rideno = param.get("rideno");
+            
+            myContract.methods.searchView(rideno).call().then(
+                function(returnarray){
+                    var obj = returnarray;       
+                    var output = "<ul>";
+                    output += "<li><span class='title'>From:</span>" + obj[1] + "</li>";     
+                    output += "<li><span class='title'>To:</span>" + obj[2] + "</li>";
+                    output += "<li><span class='title'>Date:</span>" + obj[3] + "</li>";
+                    output += "<li><span class='title'>Time:</span>" + obj[4] + "</li>";
+                    output += "<li><span class='title'>Charges:</span>" + obj[5] + " ETH</li>";
+                    output += "<li><span class='title'>Seats Available:</span>" + obj[6] + "</li>";
+                    output += "<li><span class='title'>Status:</span>" + obj[7] + "</li>";
+                    output += "<li><span class='title'>Vehicle Type:</span>" + obj[8] + "</li>";
+                    output += "</ul>";
+                    
+                    $("#ridedetails").html(output);       
+                    $("#ridecharges").val(obj[5]);   
+                }
+            );
+
+            $("#btn_action").click(function(){
+                var nop = $("#nop").val();
+                
+                myContract.methods.RideNOPStatus(rideno, nop).call().then(
+                    function(returnstatus){
+                        if(returnstatus == true) {
+                            myContract.methods.MapRideBooking(rideno, hashcode, nop, $("#ridecharges").val())
+                                .send({from: hashcode, gas: '3000000'})
+                                .then(function() {
+                                    $("#msg").html("Booking has been saved successfully!");
+                                })
+                                .catch(function(error) {
+                                    $("#msg").html("Error: " + error.message);
+                                });
+                        } else {
+                            alert("Invalid Passenger Count...");
+                        }
+                    }
+                );
+            });
+        });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="logo-container">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.24a2 2 0 0 0-1.8 1.1l-.8 1.63A6 6 0 0 0 2 12.42V16h2"></path>
+                <circle cx="6.5" cy="16.5" r="2.5"></circle>
+                <circle cx="16.5" cy="16.5" r="2.5"></circle>
+            </svg>
+        </div>
+
+        <h1>CarPooling - Passenger Panel</h1>
+
+        <div class="user-info">
+            <div class="info-item">
+                <strong>Welcome:</strong>
+                <span id="uname">Loading...</span>
+            </div>
+            <div class="info-item">
+                <strong>Account ID:</strong>
+                <span id="hcode">Loading...</span>
+            </div>
+            <div class="info-item">
+                <strong>Balance:</strong>
+                <span id="balance">Loading...</span>
+            </div>
+        </div>
+
+        <div class="dashboard-link">
+            <a href="userdashboardpanelchoice.html" class="btn">Dashboard</a>
+        </div>
+
+        <div class="ride-details">
+            <h4>Ride Details</h4>
+            <div id="ridedetails"></div>
+        </div>
+
+        <div class="booking-form">
+            <h4>Booking Details</h4>
+            <form>
+                <div class="form-group">
+                    <label for="nop">Number of Passengers</label>
+                    <input type="text" id="nop" placeholder="Enter number of passengers" />
+                    <input type="hidden" id="ridecharges" />
+                </div>
+                <button type="button" id="btn_action">Book Now</button>
+                <div id="msg"></div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

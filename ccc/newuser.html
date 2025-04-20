@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>TukTukGo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- External Libraries -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
+    <script src="node_modules/web3.js-browser/build/web3.js"></script>
+    <script src="node_modules/web3/dist/web3.min.js"></script>
+    <script src="web3connection.js"></script>
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="style.css" />
+
+    <style>
+        :root {
+            --primary-color: #e3c29e;
+            --primary-hover: #d4b08c;
+            --secondary-color: #f0d5b3;
+            --background-start: #faf6f1;
+            --background-end: #f5ebe0;
+            --text-primary: #6b4423;
+            --text-secondary: #8b6b4f;
+            --panel-background: #ffffff;
+            --shadow-color: rgba(227, 194, 158, 0.2);
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--background-start), var(--background-end));
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .title {
+            display: block;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        form {
+            background-color: var(--panel-background);
+            padding: 2.5rem;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 30px var(--shadow-color);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--secondary-color);
+            border-radius: 1rem;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            background-color: rgba(255, 255, 255, 0.8);
+            color: var(--text-primary);
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 4px var(--shadow-color);
+            background-color: white;
+        }
+
+        input[type="button"] {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            background-color: var(--primary-color);
+            color: var(--text-primary);
+            border: none;
+            border-radius: 1rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        input[type="button"]:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px var(--shadow-color);
+        }
+
+        .btn {
+            display: inline-block;
+            text-align: center;
+            margin-top: 2rem;
+            color: var(--text-primary);
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 0.75rem;
+            background-color: transparent;
+            transition: background-color 0.3s ease, transform 0.2s ease-in-out;
+        }
+
+        .btn:hover {
+            color: var(--primary-color);
+            background-color: var(--shadow-color);
+            transform: translateY(-2px);
+        }
+
+    </style>
+
+    <script>
+        $(document).ready(function(){
+            $("#btn_action").click(function(){
+                var hashcode = $("#hashaddress").val();
+                var uname = $("#username").val();
+                var uemail = $("#useremail").val();
+                var ucontact = $("#usercontact").val();
+
+                myContract.methods.RegisterUserAccount(hashcode, uname, ucontact, uemail).send({from : hashcode, gas : '3000000'});
+
+                Cookies.set('hashcodecp', hashcode, {expires : 14});
+                Cookies.set('usernamecp', uname, {expires : 14});
+
+                window.location.replace('userdashboardpanelchoice.html');
+            });
+        });
+        
+    </script>
+</head>
+<body>
+    <h1 class="app-title">TukTukGo</h1>
+
+    <form>
+        <div>
+            <span class="title">User Name</span>
+            <input type="text" id="username" placeholder="Write Here" />
+        </div>
+
+        <div>
+            <span class="title">User Email</span>
+            <input type="text" id="useremail" placeholder="Write Here" />
+        </div>
+
+        <div>
+            <span class="title">User Contact No</span>
+            <input type="text" id="usercontact" placeholder="Write Here" />
+        </div>
+
+        <div>
+            <span class="title">HashCode Address</span>
+            <input type="text" id="hashaddress" placeholder="Write Here" />
+        </div>
+
+        <input type="button" id="btn_action" value="Create Account" />
+
+        <div style="display: flex; justify-content: center; margin-top: 20px;">
+            <a class="btn" href="index.html">
+                Go Back
+            </a>
+        </div>
+    </form>
+</body>
+</html>

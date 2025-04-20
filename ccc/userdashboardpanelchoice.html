@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CarPooling - Login Panel</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="style.css" />
+
+    <style>
+        :root {
+            --primary-color: #e3c29e;
+            --primary-hover: #d4b08c;
+            --secondary-color: #f0d5b3;
+            --background-start: #faf6f1;
+            --background-end: #f5ebe0;
+            --text-primary: #6b4423;
+            --text-secondary: #8b6b4f;
+            --panel-background: #ffffff;
+            --shadow-color: rgba(227, 194, 158, 0.2);
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--background-start), var(--background-end));
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(to right, var(--text-primary), var(--primary-color));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 2rem;
+        }
+
+        .btn, .btn_logout {
+            display: inline-block;
+            padding: 1rem 2rem;
+            background-color: var(--primary-color);
+            color: var(--text-primary);
+            border: none;
+            border-radius: 1rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px var(--shadow-color);
+            margin: 0.5rem;
+            width: 300px;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px var(--shadow-color);
+        }
+
+        .btn_logout {
+            background-color: #e76f51;
+            color: #fff;
+        }
+
+        .btn_logout:hover {
+            background-color: #d96046;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(231, 111, 81, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <h1>CarPooling - Login Panel</h1>
+    <hr />
+    
+    <a class="btn" href="dashboard.html">Driver Panel View</a>
+    <a class="btn" href="dashboardpassenger.html">Passenger Panel View</a>
+    <a class="btn_logout" href="index.html">Logout</a>
+</body>
+</html>

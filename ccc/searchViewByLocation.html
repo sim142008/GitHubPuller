@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CarPooling - Search Rides</title>
+    
+    <!-- External Libraries -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
+    <script src="node_modules/web3/dist/web3.min.js"></script>
+    <script src="web3connection.js"></script>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <link rel="stylesheet" href="style.css" />
+    
+    <style>
+        :root {
+            --primary-color: #e3c29e;
+            --secondary-color: #f0d5b3;
+            --background: #faf6f1;
+            --text-color: #6b4423;
+            --panel-bg: #ffffff;
+        }
+
+        body {
+            background: var(--background);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            font-family: 'Inter', sans-serif;
+            padding: 20px;
+        }
+
+        .container {
+            background: var(--panel-bg);
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+            animation: fadeIn 1s ease;
+        }
+
+        h1 {
+            color: var(--text-color);
+            margin-bottom: 10px;
+        }
+
+        .input-group {
+            margin-bottom: 1rem;
+        }
+
+        input, button {
+            width: 100%;
+            padding: 12px;
+            margin: 5px 0;
+            border-radius: 8px;
+            border: 1px solid var(--secondary-color);
+            font-size: 1rem;
+        }
+
+        button {
+            background: var(--primary-color);
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #d4b08c;
+        }
+
+        .ride-list {
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .ride-item {
+            background: var(--secondary-color);
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 10px;
+            background: #562d52;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+
+        #map {
+            height: 400px;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        #map-instructions {
+            font-size: 16px;
+            color: var(--text-color);
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+    </style>
+    
+    <script>
+    $(document).ready(function(){
+        var hashcode = Cookies.get('hashcodecp');
+        var username = Cookies.get('usernamecp');  
+        $("#uname").text(username); 
+        $("#hcode").text(hashcode);
+        
+        web3.eth.getBalance(hashcode).then(function(balance){
+            $("#balance").text(web3.utils.fromWei(balance, "ether") + " ETH");
+        });
+
+        $("#btn_search").click(function(){
+            var from = $("#hfrom").val();
+            var to = $("#hto").val();
+            
+            myContract.methods.searchByLocation(hashcode, from, to).call().then(function(result){
+                var totalRides = result[1];
+                $("#ridecount").html(totalRides > 0 ? "Total Rides Found: " + totalRides : "<span style='color:red'>No rides found</span>");
+                $("#ridedetails").empty();
+                
+                for (var i = 0; i < totalRides; i++) {
+                    var ride = result[0][i];
+                    var rideHtml = `<div class='ride-item'>
+                        <strong>Ride ${i+1}</strong>
+                        <p><strong>From:</strong> ${ride[2]}</p>
+                        <p><strong>To:</strong> ${ride[3]}</p>
+                        <p><strong>Date:</strong> ${ride[4]}</p>
+                        <p><strong>Time:</strong> ${ride[5]}</p>
+                        <p><strong>Charges:</strong> ${ride[6]} ETH</p>
+                        <p><strong>Seats:</strong> ${ride[7]}</p>
+                        <p><strong>Vehicle:</strong> ${ride[9]}</p>
+                        <p><strong>Status:</strong> ${ride[12] ? 'Active' : 'Cancelled'}</p>
+                        <a class='btn' href='viewPersonDetails.html?rideno=${ride[0]}&personhashcode=${ride[1]}'>Person Details</a>
+                        <a class='btn' href='mapRideBooking.html?rideno=${ride[0]}'>Book My Ride</a>
+                    </div>`;
+                    $("#ridedetails").append(rideHtml);
+                }
+            });
+        });
+    });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>TukTukGo</h1>
+        <p>User: <span id="uname"></span></p>
+        <p>Account ID: <span id="hcode"></span></p>
+        <p>Balance: <span id="balance"></span></p>
+        <hr>
+        <a class="btn" href="dashboardpassenger.html">Dashboard</a>
+        <hr>
+        <h3>Search Rides</h3>
+        <div class="input-group">
+            <input type="text" id="hfrom" placeholder="Heading From (Click on map)" readonly />
+            <br>OR<br>
+            <input type="text" id="hto" placeholder="Heading To (Click on map)" readonly />
+        </div>
+        <button id="btn_search">Search Now</button>
+        <hr>
+        <h4>Ride Details - <span id="ridecount"></span></h4>
+        <div class="ride-list" id="ridedetails"></div>
+    </div>
+
+    <!-- 🗺️ Map Section -->
+    <div style="margin-top: 30px; max-width: 800px; width: 100%;">
+        <h3 style="text-align:center; color: var(--text-color);">Select Your Route</h3>
+        <div id="map-instructions" style="text-align:center; margin-bottom: 10px; font-weight:bold;">
+            Click on map to select your "From" and "To" locations. Use zoom controls if needed.
+        </div>
+        <div id="map"></div>
+    </div>
+
+    <!-- Leaflet CDN -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+    <script>
+        // Initialize Leaflet Map
+        var map = L.map('map', {
+            center: [28.6139, 77.2090], // Default to Delhi
+            zoom: 12,
+            zoomControl: true, // Enable zoom controls
+            scrollWheelZoom: true // Allow scrolling to zoom
+        });
+
+        // Add OpenStreetMap Tile Layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        let fromMarker = null;
+        let toMarker = null;
+        let isSelectingFrom = true; // Toggle flag
+
+        map.on('click', function (e) {
+            const latlng = e.latlng.lat.toFixed(6) + "," + e.latlng.lng.toFixed(6);
+
+            if (isSelectingFrom) {
+                if (fromMarker) map.removeLayer(fromMarker);
+                fromMarker = L.marker(e.latlng, { icon: L.icon({ iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png', iconSize: [25, 41], iconAnchor: [12, 41] }) })
+                    .addTo(map)
+                    .bindPopup("From")
+                    .openPopup();
+                $("#hfrom").val(latlng).attr("data-latlng", latlng);
+                isSelectingFrom = false;
+                $("#map-instructions").text("Now click for 'To' location.");
+            } else {
+                if (toMarker) map.removeLayer(toMarker);
+                toMarker = L.marker(e.latlng, { icon: L.icon({ iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png', iconSize: [25, 41], iconAnchor: [12, 41] }) })
+                    .addTo(map)
+                    .bindPopup("To")
+                    .openPopup();
+                $("#hto").val(latlng).attr("data-latlng", latlng);
+                isSelectingFrom = true;
+                $("#map-instructions").text("Click for 'From' location.");
+            }
+        });
+    </script>
+</body>
+</html>
