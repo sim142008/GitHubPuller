@@ -5,11 +5,11 @@ import Web3 from 'web3';
 import CarpoolingContractABI from '../contracts/CarpoolingContractABI';
 import DataBankABI from '../contracts/DataBankABI';
 
-// Contract addresses - currently using placeholder addresses for development
-// In a production environment, these would be the actual deployed contract addresses
-// We're using the zero address which is a valid Ethereum address that can be verified by isAddress() checks
-const CARPOOLING_CONTRACT_ADDRESS = '0x0000000000000000000000000000000000000000';
-const DATABANK_CONTRACT_ADDRESS = '0x0000000000000000000000000000000000000000';
+// Contract addresses - using real deployed contract addresses
+// The CarpoolingContract has been deployed to the network
+// The DataBank contract is imported by CarpoolingContract and doesn't need a separate address
+const CARPOOLING_CONTRACT_ADDRESS = '0xd9145CCE52D386f254917e481eB44e9943F39138';
+const DATABANK_CONTRACT_ADDRESS = '0xd9145CCE52D386f254917e481eB44e9943F39138'; // Same as CarpoolingContract since DataBank is included
 
 // Create the context
 const Web3Context = createContext();
@@ -258,9 +258,9 @@ export const Web3Provider = ({ children }) => {
       
       updateConnectionStatus('processing', 'Registering user...');
       
-      // Call the contract method
+      // Call the contract method - use RegisterUserAccount which is the actual function name in the contract
       const tx = await carpoolingContract.methods
-        .registerUser(username, phoneNumber, email)
+        .RegisterUserAccount(account, username, phoneNumber, email)
         .send({ from: account });
       
       updateConnectionStatus('success', 'User registered successfully');
@@ -287,10 +287,18 @@ export const Web3Provider = ({ children }) => {
         throw new Error('No user address provided');
       }
       
-      // Call the contract method
+      // Try to call the login panel first to check if user exists
+      const loginStatus = await carpoolingContract.methods
+        .loginPanel(userAddress)
+        .call();
+      
+      // Then get user details
       const userDetails = await carpoolingContract.methods
         .getUserDetails(userAddress)
         .call();
+      
+      // If username is "Not Found", user is not registered
+      const isRegistered = userDetails[0] !== "Not Found";
       
       return { 
         success: true, 
@@ -298,7 +306,7 @@ export const Web3Provider = ({ children }) => {
           username: userDetails[0],
           phoneNumber: userDetails[1],
           email: userDetails[2],
-          isRegistered: userDetails[3]
+          isRegistered: isRegistered
         } 
       };
     } catch (error) {
