@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Alert } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { useWeb3 } from '../utils/Web3Context';
@@ -6,16 +6,43 @@ import LoadingSpinner from '../components/LoadingSpinner';
 
 const Login = ({ setIsConnected, setUserAddress, setUserDetails }) => {
   const navigate = useNavigate();
-  const { initWeb3, account, getUserDetails, isConnected } = useWeb3();
+  const { initWeb3, account, getUserDetails, isConnected, connectionStatus } = useWeb3();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isMetaMaskInstalled, setIsMetaMaskInstalled] = useState(false);
+
+  // Check for MetaMask on component mount
+  useEffect(() => {
+    const checkForMetaMask = () => {
+      const hasMetaMask = typeof window.ethereum !== 'undefined' || typeof window.web3 !== 'undefined';
+      setIsMetaMaskInstalled(hasMetaMask);
+      if (!hasMetaMask) {
+        setError('No Ethereum wallet detected. Please install MetaMask to use this application.');
+      }
+    };
+    
+    checkForMetaMask();
+  }, []);
 
   // Redirect if already logged in
   useEffect(() => {
-    if (isConnected && account) {
-      handleLogin();
-    }
+    const tryLogin = async () => {
+      if (isConnected && account) {
+        await handleLogin();
+      }
+    };
+    
+    tryLogin();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isConnected, account]);
+
+  // Monitor connection status for errors
+  useEffect(() => {
+    if (connectionStatus && connectionStatus.status === 'error') {
+      setError(connectionStatus.message);
+      setLoading(false);
+    }
+  }, [connectionStatus]);
 
   const connectWallet = async () => {
     try {
@@ -29,7 +56,9 @@ const Login = ({ setIsConnected, setUserAddress, setUserDetails }) => {
         return;
       }
       
+      console.log('Attempting to connect to Web3...');
       const success = await initWeb3();
+      console.log('Web3 connection result:', success);
       
       if (!success) {
         setError('Failed to connect to wallet. Please make sure MetaMask is installed and unlocked.');
@@ -121,14 +150,25 @@ const Login = ({ setIsConnected, setUserAddress, setUserDetails }) => {
               )}
               
               <div className="d-grid gap-2 mb-4">
-                <Button 
-                  variant="primary" 
-                  size="lg" 
-                  onClick={connectWallet}
-                  disabled={loading}
-                >
-                  Connect with MetaMask
-                </Button>
+                {isMetaMaskInstalled ? (
+                  <Button 
+                    variant="primary" 
+                    size="lg" 
+                    onClick={connectWallet}
+                    disabled={loading}
+                  >
+                    Connect with MetaMask
+                  </Button>
+                ) : (
+                  <a 
+                    href="https://metamask.io/download/" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="btn btn-primary btn-lg"
+                  >
+                    Install MetaMask
+                  </a>
+                )}
                 
                 <div className="text-center mt-3">
                   <p className="mb-0">

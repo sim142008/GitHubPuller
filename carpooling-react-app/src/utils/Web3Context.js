@@ -7,6 +7,7 @@ import DataBankABI from '../contracts/DataBankABI';
 
 // Contract addresses - currently using placeholder addresses for development
 // In a production environment, these would be the actual deployed contract addresses
+// We're using the zero address which is a valid Ethereum address that can be verified by isAddress() checks
 const CARPOOLING_CONTRACT_ADDRESS = '0x0000000000000000000000000000000000000000';
 const DATABANK_CONTRACT_ADDRESS = '0x0000000000000000000000000000000000000000';
 
@@ -30,6 +31,8 @@ export const Web3Provider = ({ children }) => {
   });
   
   // Attempt to connect automatically when the component mounts
+  // We're deliberately excluding initWeb3 from deps because we want this to run once on mount
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   React.useEffect(() => {
     const attemptConnection = async () => {
       try {
@@ -47,8 +50,13 @@ export const Web3Provider = ({ children }) => {
     try {
       updateConnectionStatus('connecting', 'Connecting to blockchain...');
       
+      // For development mode, we can use a fallback mode if no provider is available
+      const isDevelopment = process.env.NODE_ENV === 'development';
+      const mockMode = isDevelopment && (!window.ethereum && !window.web3);
+      
       // Check if MetaMask or other provider is available
       if (window.ethereum) {
+        console.log('Using MetaMask provider');
         const web3Instance = new Web3(window.ethereum);
         setWeb3(web3Instance);
         setProvider(web3Instance);
@@ -59,22 +67,28 @@ export const Web3Provider = ({ children }) => {
           
           // Get the connected account
           const accounts = await web3Instance.eth.getAccounts();
-          setAccount(accounts[0]);
-          
-          // Get network ID
-          const netId = await web3Instance.eth.net.getId();
-          setNetworkId(netId);
-          
-          // Initialize contracts
-          initializeContracts(web3Instance);
-          
-          setIsConnected(true);
-          updateConnectionStatus('connected', 'Connected to blockchain');
-          
-          // Setup event listeners for account or network changes
-          setupEventListeners();
-          
-          return true;
+          if (accounts && accounts.length > 0) {
+            setAccount(accounts[0]);
+            
+            // Get network ID
+            const netId = await web3Instance.eth.net.getId();
+            setNetworkId(netId);
+            
+            // Initialize contracts
+            initializeContracts(web3Instance);
+            
+            setIsConnected(true);
+            updateConnectionStatus('connected', 'Connected to blockchain');
+            
+            // Setup event listeners for account or network changes
+            setupEventListeners();
+            
+            return true;
+          } else {
+            console.error('No accounts found after connecting');
+            updateConnectionStatus('error', 'No accounts found. Please unlock your wallet.');
+            return false;
+          }
         } catch (error) {
           console.error('User denied account access:', error);
           updateConnectionStatus('error', 'User denied account access');
@@ -83,27 +97,46 @@ export const Web3Provider = ({ children }) => {
       } 
       // Legacy dapp browsers
       else if (window.web3) {
+        console.log('Using legacy Web3 provider');
         const web3Instance = new Web3(window.web3.currentProvider);
         setWeb3(web3Instance);
         setProvider(web3Instance);
         
-        const accounts = await web3Instance.eth.getAccounts();
-        setAccount(accounts[0]);
-        
-        const netId = await web3Instance.eth.net.getId();
-        setNetworkId(netId);
-        
-        initializeContracts(web3Instance);
-        
-        setIsConnected(true);
-        updateConnectionStatus('connected', 'Connected to blockchain');
-        
-        setupEventListeners();
-        
-        return true;
+        try {
+          const accounts = await web3Instance.eth.getAccounts();
+          if (accounts && accounts.length > 0) {
+            setAccount(accounts[0]);
+            
+            const netId = await web3Instance.eth.net.getId();
+            setNetworkId(netId);
+            
+            initializeContracts(web3Instance);
+            
+            setIsConnected(true);
+            updateConnectionStatus('connected', 'Connected to blockchain');
+            
+            setupEventListeners();
+            
+            return true;
+          } else {
+            updateConnectionStatus('error', 'No accounts found. Please unlock your wallet.');
+            return false;
+          }
+        } catch (error) {
+          console.error('Error accessing accounts:', error);
+          updateConnectionStatus('error', 'Error accessing accounts. Please unlock your wallet.');
+          return false;
+        }
       } 
-      // No web3 provider
+      // Development mode fallback (for testing UI without blockchain)
+      else if (mockMode) {
+        console.log('No provider found, but in development mode - using mock mode');
+        updateConnectionStatus('warning', 'Running in development mode without blockchain connection. Install MetaMask for full functionality.');
+        return false;
+      }
+      // No web3 provider in production
       else {
+        console.error('No Ethereum wallet detected');
         updateConnectionStatus('error', 'No Ethereum wallet detected. Please install MetaMask or another wallet');
         return false;
       }
@@ -116,19 +149,44 @@ export const Web3Provider = ({ children }) => {
 
   const initializeContracts = (web3Instance) => {
     try {
+      if (!web3Instance) {
+        console.error('Web3 instance not available');
+        updateConnectionStatus('error', 'Web3 instance not available');
+        return;
+      }
+      
+      // Validate contract addresses
+      if (!Web3.utils.isAddress(CARPOOLING_CONTRACT_ADDRESS) || 
+          !Web3.utils.isAddress(DATABANK_CONTRACT_ADDRESS)) {
+        console.warn('Using placeholder contract addresses in development mode');
+        updateConnectionStatus('warning', 'Using placeholder contract addresses. Smart contract functions will not work.');
+        return;
+      }
+
       // Initialize the CarpoolingContract
-      const carpoolingContractInstance = new web3Instance.eth.Contract(
-        CarpoolingContractABI,
-        CARPOOLING_CONTRACT_ADDRESS
-      );
-      setCarpoolingContract(carpoolingContractInstance);
+      try {
+        const carpoolingContractInstance = new web3Instance.eth.Contract(
+          CarpoolingContractABI,
+          CARPOOLING_CONTRACT_ADDRESS
+        );
+        setCarpoolingContract(carpoolingContractInstance);
+        console.log('CarpoolingContract initialized successfully');
+      } catch (contractError) {
+        console.error('Failed to initialize CarpoolingContract:', contractError);
+      }
       
       // Initialize the DataBank contract
-      const dataBankContractInstance = new web3Instance.eth.Contract(
-        DataBankABI,
-        DATABANK_CONTRACT_ADDRESS
-      );
-      setDataBankContract(dataBankContractInstance);
+      try {
+        const dataBankContractInstance = new web3Instance.eth.Contract(
+          DataBankABI,
+          DATABANK_CONTRACT_ADDRESS
+        );
+        setDataBankContract(dataBankContractInstance);
+        console.log('DataBankContract initialized successfully');
+      } catch (contractError) {
+        console.error('Failed to initialize DataBankContract:', contractError);
+      }
+      
     } catch (error) {
       console.error('Failed to initialize contracts:', error);
       updateConnectionStatus('error', 'Failed to initialize smart contracts');
